@@ -19,16 +19,16 @@ async function main() {
     await prisma.servicio.deleteMany();
 
     const henry = await prisma.barbero.create({
-        data: { nombre: "Henry Martinez", especialidad: "Corte y barba", activo: true, disponible: true },
+        data: { nombre: "Henry Martinez", especialidad: "Corte y barba", activo: true, disponible: true, imagenUrl: "/images/barberos/pablo-neruda.jpg" },
     });
     const francisco = await prisma.barbero.create({
-        data: { nombre: "Francisco Duran", especialidad: "Corte", activo: true, disponible: true },
+        data: { nombre: "Francisco Duran", especialidad: "Corte", activo: true, disponible: true, imagenUrl: "/images/barberos/nelson-portillo.jpg" },
     });
     const christopher = await prisma.barbero.create({
-        data: { nombre: "Christopher Alvarenga", especialidad: "Barba", activo: true, disponible: true },
+        data: { nombre: "Christopher Alvarenga", especialidad: "Barba", activo: true, disponible: true, imagenUrl: "/images/barberos/juan-melendez.jpg" },
     });
     const carlos = await prisma.barbero.create({
-        data: { nombre: "Carlos Villacorta", especialidad: "Corte clásico", activo: true, disponible: true },
+        data: { nombre: "Carlos Villacorta", especialidad: "Corte clásico", activo: true, disponible: true, imagenUrl: "/images/barberos/primero-disponible.jpg" },
     });
 
     const soloCorte = await prisma.servicio.create({

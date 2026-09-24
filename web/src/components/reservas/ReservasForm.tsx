@@ -61,14 +61,19 @@ export default function ReservasForm() {
 
     useEffect(() => {
         async function cargarCatalogo() {
-            const [barberosDisponibles, serviciosActivos] = await Promise.all([
-                barberoService.obtenerDisponibles(),
-                servicioService.obtenerActivos(),
-            ]);
+            try {
+                const [barberosDisponibles, serviciosActivos] = await Promise.all([
+                    barberoService.obtenerDisponibles(),
+                    servicioService.obtenerActivos(),
+                ]);
 
-            setBarberos(barberosDisponibles);
-            setServicios(serviciosActivos);
-            setCargandoCatalogo(false);
+                setBarberos(barberosDisponibles);
+                setServicios(serviciosActivos);
+            } catch {
+                setError("No se pudo cargar el catálogo. Intenta de nuevo más tarde.");
+            } finally {
+                setCargandoCatalogo(false);
+            }
         }
 
         cargarCatalogo();
@@ -76,8 +81,13 @@ export default function ReservasForm() {
 
     // Los horarios disponibles dependen del barbero, el servicio y la fecha
     // elegidos, así que se recalculan contra la API cada vez que cambian.
-    const [horariosDisponibles, setHorariosDisponibles] = useState<string[]>([]);
-    const [cargandoHorarios, setCargandoHorarios] = useState(false);
+    // Se guarda junto con la combinación consultada: si la selección cambió y
+    // la respuesta aún no llega, la lista anterior no se muestra y se sabe que
+    // todavía se está cargando.
+    const claveHorarios = `${barberoId}|${servicioId}|${fecha}`;
+    const [horarios, setHorarios] = useState({ clave: "", lista: [] as string[] });
+    const horariosDisponibles = horarios.clave === claveHorarios ? horarios.lista : [];
+    const cargandoHorarios = Boolean(fecha) && horarios.clave !== claveHorarios;
 
     useEffect(() => {
         if (!barberoId || !servicioId || !fecha) {
@@ -85,21 +95,22 @@ export default function ReservasForm() {
         }
 
         let cancelado = false;
-        setCargandoHorarios(true);
 
         citaService
             .obtenerDisponibilidad(barberoId, servicioId, fecha)
-            .then((horarios) => {
-                if (!cancelado) setHorariosDisponibles(horarios);
+            .then((lista) => {
+                if (!cancelado) setHorarios({ clave: claveHorarios, lista });
             })
-            .finally(() => {
-                if (!cancelado) setCargandoHorarios(false);
+            .catch(() => {
+                if (cancelado) return;
+                setHorarios({ clave: claveHorarios, lista: [] });
+                setError("No se pudieron consultar los horarios disponibles.");
             });
 
         return () => {
             cancelado = true;
         };
-    }, [barberoId, servicioId, fecha]);
+    }, [barberoId, servicioId, fecha, claveHorarios]);
 
     // Se recalculan únicamente cuando cambia el identificador seleccionado.
     const barberoSeleccionado = useMemo(
@@ -168,7 +179,7 @@ export default function ReservasForm() {
             if (error instanceof ErrorHorarioNoDisponible) {
                 // Otra persona reservó ese horario primero: se refresca la
                 // lista y se regresa al paso de fecha/hora para elegir otro.
-                setHorariosDisponibles(error.horarios);
+                setHorarios({ clave: claveHorarios, lista: error.horarios });
                 setHora("");
                 setPaso(3);
             }

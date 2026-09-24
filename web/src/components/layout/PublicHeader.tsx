@@ -9,9 +9,7 @@ import PrimaryButton from "@/components/ui/PrimaryButton";
 
 const navigation = [
     { label: "Inicio", href: "/" },
-    { label: "Barberos", href: "/barberos" },
-    { label: "Servicios", href: "/servicios" },
-    { label: "Horarios", href: "/horarios" }
+    { label: "Barberos", href: "/barberos" }
 ];
 
 export default function Header() {
